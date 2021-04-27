@@ -5,6 +5,10 @@
 #include <unistd.h>
 #include <math.h>
 
+#include "Renderer.h"
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
+
 #define SCREEN_WIDTH	640
 #define SCREEN_HEIGHT	480
 
@@ -31,20 +35,6 @@ std::string fragmentShader =
 	"  color = u_color;\n"
 	"}\n"
 ;
-
-void GLClearError()
-{
-	while(glGetError() != GL_NO_ERROR);
-}
-
-void GLCheckError()
-{
-	GLenum error;
-	while((error = glGetError()) != GL_NO_ERROR)
-	{
-		std::cout << "GL Error code : " << error << std::endl;
-	}
-}
 
 unsigned int compileShader(GLuint type, const std::string &source)
 {
@@ -127,27 +117,18 @@ int main(void)
 	};
 
 	unsigned int vao;
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
+	GLCall(glGenVertexArrays(1, &vao));
+	GLCall(glBindVertexArray(vao));
 
-	unsigned int buffer;
-	glGenBuffers(1, &buffer);
-	glBindBuffer(GL_ARRAY_BUFFER, buffer);
-	glBufferData(GL_ARRAY_BUFFER, 2 * 6 * sizeof(GLfloat), triangleVertices, GL_STATIC_DRAW);
+	VertexBuffer vb(triangleVertices, 2 * 6 * sizeof(GLfloat));
 
-	glEnableVertexAttribArray(0);
-	GLClearError();
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 3, (const void *)0);
-	GLCheckError();
+	GLCall(glEnableVertexAttribArray(0));
+	GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 3, (const void *)0));
 
-	unsigned int ibo;
-	glGenBuffers(1, &ibo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(GLuint), indices, GL_STATIC_DRAW);
-
+	IndexBuffer ib(indices, 6);
 
 	GLuint program = createShader(vertexShader, fragmentShader);
-	glUseProgram(program);
+	GLCall(glUseProgram(program));
 
 	int location = glGetUniformLocation(program, "u_color");
 	if (location == -1)
@@ -164,15 +145,15 @@ int main(void)
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window))
 	{
+		/* Render here */
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		/* Render here */
-		glUseProgram(program);
-		glBindVertexArray(vao);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-	
-		glUniform4f(location, red, 0.3f, 0.0f, 1.0f);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+		GLCall(glUseProgram(program));
+		GLCall(glBindVertexArray(vao));
+		ib.Bind();
+
+		GLCall(glUniform4f(location, red, 0.3f, 0.0f, 1.0f));
+		GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
 
 		if (red >= 1.0f)
 			inc = -0.05;
@@ -186,7 +167,7 @@ int main(void)
 		/* Poll for and process events */
 		glfwPollEvents();
 	}
-	glDeleteProgram(program);
+	GLCall(glDeleteProgram(program));
 	glfwTerminate();
 	return 0;
 }
