@@ -61,7 +61,9 @@ SRCS_DIR = $(shell find $(SRC_DIR) -type d)
 INC =
 vpath %.hpp $(INC_DIR)
 
-SRC = main.cpp Renderer.cpp IndexBuffer.cpp VertexBuffer.cpp
+SRC = main.cpp Renderer.cpp
+SRC+= IndexBuffer.cpp VertexBuffer.cpp
+SRC+= VertexArray.cpp
 
 OBJ = $(addprefix  $(OBJ_DIR)/,$(SRC:%.cpp=%.o))
 vpath %.cpp $(SRCS_DIR)

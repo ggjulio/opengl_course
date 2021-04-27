@@ -7,6 +7,7 @@
 
 #include "Renderer.h"
 #include "VertexBuffer.h"
+#include "VertexArray.h"
 #include "IndexBuffer.h"
 
 #define SCREEN_WIDTH	640
@@ -116,15 +117,16 @@ int main(void)
 		2,3,1
 	};
 
-	unsigned int vao;
-	GLCall(glGenVertexArrays(1, &vao));
-	GLCall(glBindVertexArray(vao));
+	// unsigned int vao;
+	// GLCall(glGenVertexArrays(1, &vao));
+	// GLCall(glBindVertexArray(vao));
 
-	VertexBuffer vb(triangleVertices, 2 * 6 * sizeof(GLfloat));
-
-	GLCall(glEnableVertexAttribArray(0));
-	GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 3, (const void *)0));
-
+	VertexArray va;
+	VertexBuffer vb(triangleVertices, 2 * 6 * sizeof(GLfloat));	
+	VertexBufferLayout layout;
+	layout.Push<float>(3);
+	va.AddBuffer(vb, layout);
+	
 	IndexBuffer ib(indices, 6);
 
 	GLuint program = createShader(vertexShader, fragmentShader);
@@ -149,7 +151,7 @@ int main(void)
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		GLCall(glUseProgram(program));
-		GLCall(glBindVertexArray(vao));
+		va.Bind();
 		ib.Bind();
 
 		GLCall(glUniform4f(location, red, 0.3f, 0.0f, 1.0f));
